@@ -1,0 +1,13 @@
+syntax: glob
+
+*.pyc
+*~
+
+.pioenvs
+.piolibdeps
+.clang_complete
+.gcc-flags.json
+
+ArduinoFirmware/lib/RF24
+ArduinoFirmware/lib/IceC
+ArduinoFirmware/lib/nRF24Endpoint
