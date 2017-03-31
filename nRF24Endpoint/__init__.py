@@ -127,8 +127,52 @@ class ConnectorI(pe.ConnectorI):
 
 
 class nRF24Bridge:
+    MAX_PAYLOAD_SIZE = 256
+    NBP_MAGIC = b"NBP"
+    CMD_SET_CHANNEL = b'1'
+    CMD_SET_ADDRESS = b'2'
+    CMD_SET_DESTINATION = b'3'
+    CMD_SEND = b'4'
+
     def __init__(self, path, speed, channel, address):
         self._device = serial.Serial(path, speed)
+        self.set_channel(channel)
+
+        if address is not None:
+            self.set_address(address)
+
+    def set_channel(self, channel):
+        channel = int(channel)
+        assert (channel >= 1 and channel <= 125), "Invalid channel, not in [1, 125]"
+
+        cmd = self.NBP_MAGIC + self.CMD_SET_CHANNEL + bytes([channel])
+        self._device.write(cmd)
+
+    def set_address(self, address):
+        assert len(address) <= 5, "nRF24 address should be 5 bytes or less"
+        address = bytes(address, "utf-8")
+        address += b'\x00' * (5 - len(address))
+
+        cmd = self.NBP_MAGIC + self.CMD_SET_ADDRESS + address
+        self._device.write(cmd)
+
+    def set_destination(self, dst):
+        assert len(dst) <= 5, "nRF24 destination should be 5 bytes or less"
+        dst = bytes(dst, "utf-8")
+        dst += b'\x00' * (5 - len(dst))
+
+        cmd = self.NBP_MAGIC + self.CMD_SET_DESTINATION + dst
+        self._device.write(cmd)
+
+    def send(self, data):
+        assert len(data) <= self.MAX_PAYLOAD_SIZE, "Message is too big!"
+
+        cmd = self.NBP_MAGIC  + self.CMD_SEND
+        cmd += bytes([(len(data) >> 8) & 0xff, len(data) & 0xff])
+        cmd += data
+
+        self._device.write(cmd)
+        return len(data)
 
     def get_serial_fd(self):
         return self._device.fileno()
@@ -154,7 +198,8 @@ class TransceiverI(pe.TransceiverI):
         if not os.path.exists(path):
             raise ValueError("Invalid config: device '{}' does not exist".format(self._path))
 
-        self._device = nRF24Bridge(path, speed, info.channel, info.address)
+        address = None if connect else info.address
+        self._device = nRF24Bridge(path, speed, info.channel, address)
 
         self._fd = self._device.get_serial_fd()
         self._incoming = not connect
@@ -177,10 +222,8 @@ class TransceiverI(pe.TransceiverI):
 
     @show_trace
     def write(self, buff):
-        print(" ## WRITE called")
-        return len(buff)
-
-        # return self._device.write(buff)
+        self._device.set_destination(self._info.address)
+        return self._device.send(buff)
 
     @show_trace
     def read(self, buff):
