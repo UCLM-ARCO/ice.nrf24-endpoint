@@ -147,6 +147,7 @@ class nRF24Bridge:
 
         cmd = self.NBP_MAGIC + self.CMD_SET_CHANNEL + bytes([channel])
         self._device.write(cmd)
+        self._device.flush()
 
     def set_address(self, address):
         assert len(address) <= 5, "nRF24 address should be 5 bytes or less"
@@ -155,6 +156,7 @@ class nRF24Bridge:
 
         cmd = self.NBP_MAGIC + self.CMD_SET_ADDRESS + address
         self._device.write(cmd)
+        self._device.flush()
 
     def set_destination(self, dst):
         assert len(dst) <= 5, "nRF24 destination should be 5 bytes or less"
@@ -163,6 +165,7 @@ class nRF24Bridge:
 
         cmd = self.NBP_MAGIC + self.CMD_SET_DESTINATION + dst
         self._device.write(cmd)
+        self._device.flush()
 
     def send(self, data):
         assert len(data) <= self.MAX_PAYLOAD_SIZE, "Message is too big!"
@@ -171,13 +174,16 @@ class nRF24Bridge:
         cmd += bytes([(len(data) >> 8) & 0xff, len(data) & 0xff])
         cmd += data
 
+        print("send: {} bytes".format(len(data)))
         self._device.write(cmd)
+        self._device.flush()
         return len(data)
 
     def get_serial_fd(self):
         return self._device.fileno()
 
     def close(self):
+        self._device.flush()
         self._device.close()
 
 
@@ -196,7 +202,8 @@ class TransceiverI(pe.TransceiverI):
             raise ValueError("Invalid config: nRF24Endpoint.Device not defined")
 
         if not os.path.exists(path):
-            raise ValueError("Invalid config: device '{}' does not exist".format(self._path))
+            raise ValueError("Invalid config: device '{}' does not exist"
+                             .format(path))
 
         address = None if connect else info.address
         self._device = nRF24Bridge(path, speed, info.channel, address)

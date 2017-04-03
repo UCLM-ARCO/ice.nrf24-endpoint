@@ -8,6 +8,9 @@ syntax: glob
 .clang_complete
 .gcc-flags.json
 
-ArduinoFirmware/lib/RF24
-ArduinoFirmware/lib/IceC
-ArduinoFirmware/lib/nRF24Endpoint
+*/lib/RF24
+*/lib/IceC
+*/lib/nRF24Endpoint
+*/lib/mowayduino
+
+examples/rover-client/server/src/rover.h

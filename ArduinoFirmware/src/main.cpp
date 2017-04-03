@@ -69,8 +69,9 @@ void cmd_set_channel() {
         return;
     byte channel = Serial.read();
 
-    Serial.print("Set channel to ");
-    Serial.println(channel);
+    // Serial.print("Set channel to ");
+    // Serial.println(channel);
+
     radio.setChannel(channel);
 }
 
@@ -79,9 +80,9 @@ void cmd_set_address() {
     if (!serial_read(address, 5))
         return;
 
-    Serial.print("Set address to '");
-    Serial.print((const char*)address);
-    Serial.println("'");
+    // Serial.print("Set address to '");
+    // Serial.print((const char*)address);
+    // Serial.println("'");
 
     radio.openReadingPipe(1, address);
     radio.startListening();
@@ -92,9 +93,9 @@ void cmd_set_destination() {
     if (!serial_read(address, 5))
         return;
 
-    Serial.print("Set destination to '");
-    Serial.print((const char*)address);
-    Serial.println("'");
+    // Serial.print("Set destination to '");
+    // Serial.print((const char*)address);
+    // Serial.println("'");
 
     radio.openWritingPipe(address);
 }
@@ -103,10 +104,10 @@ void cmd_send() {
     byte buff[] = {0, 0};
     if (!serial_read(buff, 2))
          return;
-
     uint16_t size = ((uint16_t)buff[0] << 8) + buff[1];
-    Serial.print("size readed: ");
-    Serial.println(size);
+
+    // Serial.print("size readed: ");
+    // Serial.println(size);
 
     if (size > MAX_PAYLOAD_SIZE)
         return;
@@ -115,9 +116,9 @@ void cmd_send() {
     if (!serial_read(payload, size))
         return;
 
-    Serial.print("Send ");
-    Serial.print(size);
-    Serial.println(" bytes");
+    // Serial.print("Send ");
+    // Serial.print(size);
+    // Serial.println(" bytes");
 
     LFP_write_packet(&radio, payload, size);
 }
@@ -126,7 +127,7 @@ void process_input() {
     if (!starts_with_magic() or !serial_has_data())
         return;
 
-    Serial.println("magic OK");
+    // Serial.println("magic OK");
 
     byte cmd = Serial.read();
     switch (cmd) {
@@ -142,7 +143,7 @@ void setup() {
 
     radio.begin();
     radio.setPALevel(RF24_PA_LOW);
-    Serial.println("Ready!");
+    // Serial.println("Ready!");
 }
 
 void loop() {

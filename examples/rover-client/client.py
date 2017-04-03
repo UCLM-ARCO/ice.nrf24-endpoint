@@ -11,7 +11,7 @@ import Example
 
 class Client(Ice.Application):
     def run(self, args):
-        rover = "Rover -d:nrf24 -c 90 -a rover"
+        rover = "Rover -d:nrf24 -c 100 -a rover"
         if len(args) > 1:
             rover = args[1]
 
