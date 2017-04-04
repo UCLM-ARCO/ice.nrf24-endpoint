@@ -6,7 +6,7 @@ import uuid
 
 import pyendpoint as pe
 
-pe.log.activated = True
+# pe.log.activated = True
 ICE_NRF24_TYPE = 15
 
 

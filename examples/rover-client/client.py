@@ -11,7 +11,7 @@ import Example
 
 class Client(Ice.Application):
     def run(self, args):
-        rover = "Rover -d:nrf24 -c 100 -a rover"
+        rover = "Rover -e 1.0 -d:nrf24 -c 100 -a rover"
         if len(args) > 1:
             rover = args[1]
 
@@ -24,7 +24,6 @@ class Client(Ice.Application):
     def move_rover(self, rover):
         while True:
             rover.forward()
-            return
             sleep(1)
             rover.left()
             sleep(0.5)

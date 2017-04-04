@@ -142,7 +142,12 @@ void setup() {
     Serial.begin(SERIAL_SPEED);
 
     radio.begin();
-    radio.setPALevel(RF24_PA_LOW);
+    radio.setDataRate(RF24_2MBPS);
+    radio.setCRCLength(RF24_CRC_16);
+    radio.setPayloadSize(32);
+    radio.setAutoAck(true);
+    radio.setRetries(10, 15);
+    radio.setPALevel(RF24_PA_HIGH);
     // Serial.println("Ready!");
 }
 
