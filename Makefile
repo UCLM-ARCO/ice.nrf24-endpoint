@@ -14,6 +14,7 @@ clean:
 	find -name "*.pyc" -print -delete
 	find -name "*~" -print -delete
 
+	$(RM) -rf build
 	$(MAKE) -C ArduinoFirmware clean
 	$(MAKE) -C examples/rover-client/server clean
 	$(MAKE) -C examples/rover-server/client clean

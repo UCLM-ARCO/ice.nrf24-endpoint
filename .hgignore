@@ -14,3 +14,4 @@ syntax: glob
 */lib/mowayduino
 
 examples/*/*/src/rover.h
+examples/*/*/rover.js
