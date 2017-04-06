@@ -1,0 +1,15 @@
+Source: ice-nrf24
+Section: devel
+Priority: extra
+Maintainer: Oscar Aceña Herrera <oscaracena@gmail.com>
+Build-Depends: debhelper (>= 7.0.50~), python3
+Standards-Version: 3.9.8
+
+Package: ice-nrf24
+Architecture: all
+Depends: ${misc:Depends}, python3, ice-pyendpoint
+Description: Endpoint for ZeroC-ICE using nRF24
+ This ZeroC Ice endpoint uses an Arduino bridge (which sketch is
+ included in this package) connected to a nRF24 transceiver. Although
+ witten in Python, it could be used in applications made in other
+ languages (as C++, Java, etc.).
