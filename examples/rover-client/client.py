@@ -22,12 +22,12 @@ class Client(Ice.Application):
         self.move_rover(rover)
 
     def move_rover(self, rover):
+        print("making squares...")
         while True:
             rover.forward()
-            print("forward called!")
             sleep(1)
-            # rover.left()
-            # sleep(0.5)
+            rover.left()
+            sleep(0.5)
 
 
 if __name__ == "__main__":

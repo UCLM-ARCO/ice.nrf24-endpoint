@@ -3,7 +3,6 @@
 
 import sys
 import Ice
-from time import sleep
 
 Ice.loadSlice("rover.ice")
 import Example
