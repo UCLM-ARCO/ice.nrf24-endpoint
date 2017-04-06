@@ -135,11 +135,20 @@ class nRF24Bridge:
     CMD_SEND = b'4'
 
     def __init__(self, path, speed, channel, address):
-        self._device = serial.Serial(path, speed)
+        self._device = serial.Serial(path, baudrate=speed, timeout=5)
+        self.wait_for_device_reset()
+
         self.set_channel(channel)
 
         if address is not None:
             self.set_address(address)
+
+    def wait_for_device_reset(self):
+        ok = self._device.read(2)
+        if ok == b"OK":
+            return
+
+        raise RuntimeError("nRF24 Bridge is not ready!")
 
     def set_channel(self, channel):
         channel = int(channel)
@@ -174,10 +183,15 @@ class nRF24Bridge:
         cmd += bytes([(len(data) >> 8) & 0xff, len(data) & 0xff])
         cmd += data
 
-        print("send: {} bytes".format(len(data)))
         self._device.write(cmd)
         self._device.flush()
         return len(data)
+
+    def receive(self):
+        data = b""
+        while self._device.in_waiting:
+            data += self._device.read(self._device.in_waiting)
+        # print(data)
 
     def get_serial_fd(self):
         return self._device.fileno()
@@ -234,8 +248,7 @@ class TransceiverI(pe.TransceiverI):
 
     @show_trace
     def read(self, buff):
-        print(" ## READ called")
-        self._device.read()
+        self._device.receive()
         return True, 0
 
         # message = self.read_message()
