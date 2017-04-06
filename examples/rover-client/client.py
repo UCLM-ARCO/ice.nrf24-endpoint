@@ -24,9 +24,10 @@ class Client(Ice.Application):
     def move_rover(self, rover):
         while True:
             rover.forward()
+            print("forward called!")
             sleep(1)
-            rover.left()
-            sleep(0.5)
+            # rover.left()
+            # sleep(0.5)
 
 
 if __name__ == "__main__":

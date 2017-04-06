@@ -13,4 +13,4 @@ syntax: glob
 */lib/nRF24Endpoint
 */lib/mowayduino
 
-examples/rover-client/server/src/rover.h
+examples/*/*/src/rover.h

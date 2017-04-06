@@ -12,7 +12,7 @@ ICE_NRF24_TYPE = 15
 
 def show_trace(fn):
     def deco(*args, **kwargs):
-        pe.trace()
+        pe.trace(2)
         return fn(*args, **kwargs)
     return deco
 
@@ -33,7 +33,7 @@ class EndpointInfo:
 
     @show_trace
     def __str__(self):
-        return ""
+        return " -c {} -a {}".format(self.channel, self.address)
 
 
 class EndpointFactoryI(pe.EndpointFactoryI):
@@ -83,18 +83,18 @@ class EndpointI(pe.EndpointI):
 #         # add encapsulation header
 #         stream.startWriteEncaps()
 #         stream.endWriteEncaps()
-#
-#     @show_trace
-#     def transceiver(self):
-#         return TransceiverI(self._communicator, self._protocol, self._info)
-#
-#     @show_trace
-#     def endpoint(self, trans):
-#         args = str(self._info).split()
-#         endp = EndpointI(self._communicator, self._protocol)
-#         endp.initWithOptions(args, self._oaEndpoint)
-#         return endp
-#
+
+    @show_trace
+    def transceiver(self):
+        return TransceiverI(self._communicator, self._protocol, self._info, False)
+
+    @show_trace
+    def endpoint(self, trans):
+        args = str(self._info).strip().split()
+        endp = EndpointI(self._communicator, self._protocol)
+        endp.initWithOptions(args, self._oaEndpoint)
+        return endp
+
 #     @show_trace
 #     def equivalent(self, other):
 #         return self._type == other._type
@@ -134,8 +134,9 @@ class nRF24Bridge:
     CMD_SET_DESTINATION = b'3'
     CMD_SEND = b'4'
 
+    @show_trace
     def __init__(self, path, speed, channel, address):
-        self._device = serial.Serial(path, baudrate=speed, timeout=5)
+        self._device = serial.Serial(path, baudrate=speed, timeout=3)
         self.wait_for_device_reset()
 
         self.set_channel(channel)
@@ -143,6 +144,7 @@ class nRF24Bridge:
         if address is not None:
             self.set_address(address)
 
+    @show_trace
     def wait_for_device_reset(self):
         ok = self._device.read(2)
         if ok == b"OK":
@@ -150,6 +152,7 @@ class nRF24Bridge:
 
         raise RuntimeError("nRF24 Bridge is not ready!")
 
+    @show_trace
     def set_channel(self, channel):
         channel = int(channel)
         assert (channel >= 1 and channel <= 125), "Invalid channel, not in [1, 125]"
@@ -158,6 +161,7 @@ class nRF24Bridge:
         self._device.write(cmd)
         self._device.flush()
 
+    @show_trace
     def set_address(self, address):
         assert len(address) <= 5, "nRF24 address should be 5 bytes or less"
         address = bytes(address, "utf-8")
@@ -167,6 +171,7 @@ class nRF24Bridge:
         self._device.write(cmd)
         self._device.flush()
 
+    @show_trace
     def set_destination(self, dst):
         assert len(dst) <= 5, "nRF24 destination should be 5 bytes or less"
         dst = bytes(dst, "utf-8")
@@ -176,6 +181,7 @@ class nRF24Bridge:
         self._device.write(cmd)
         self._device.flush()
 
+    @show_trace
     def send(self, data):
         assert len(data) <= self.MAX_PAYLOAD_SIZE, "Message is too big!"
 
@@ -187,15 +193,43 @@ class nRF24Bridge:
         self._device.flush()
         return len(data)
 
+    @show_trace
     def receive(self):
-        data = b""
-        while self._device.in_waiting:
-            data += self._device.read(self._device.in_waiting)
-        # print(data)
+        # data = b""
+        # while self._device.in_waiting:
+        #     data += self._device.read(self._device.in_waiting)
+        # print (data)
+        # return b""
 
+        data = b""
+        while True:
+            c = self._device.read()
+            if c is b"":
+                return c
+
+            data += c
+            if len(data) < 14:
+                continue
+
+            header = b"IceP\1\0\1"
+            if data.startswith(header):
+                break
+
+            data = data[1:]
+
+        size = data[10]
+        size += data[11] << 8
+        size += data[11] << 16
+        size += data[11] << 24
+
+        data += self._device.read(size - 14)
+        return data
+
+    @show_trace
     def get_serial_fd(self):
         return self._device.fileno()
 
+    @show_trace
     def close(self):
         self._device.flush()
         self._device.close()
@@ -227,6 +261,10 @@ class TransceiverI(pe.TransceiverI):
         self._info = info
         self._connectionId = uuid.uuid4().hex
 
+    @show_trace
+    def bind(self):
+        return None
+
     # NOTE: this is needed by Ice.Admin object adapter, used in IceGrid
     @show_trace
     def getInfo(self):
@@ -248,35 +286,10 @@ class TransceiverI(pe.TransceiverI):
 
     @show_trace
     def read(self, buff):
-        self._device.receive()
-        return True, 0
-
-        # message = self.read_message()
-        # buff[:len(message)] = message[:]
-        # return True, len(message)
+        data = self._device.receive()
+        buff[:len(data)] = data[:]
+        return True, len(data)
 
     @show_trace
     def close(self):
         self._device.close()
-
-#     def read_message(self):
-#         data = ""
-#         while True:
-#             c = self._device.read()
-#             data += c
-#             if len(data) < 14:
-#                 continue
-#
-#             header = "IceP\1\0\1"
-#             if data.startswith(header):
-#                 break
-#
-#             data = data[1:]
-#
-#         size = ord(data[10])
-#         size += ord(data[11]) << 8
-#         size += ord(data[11]) << 16
-#         size += ord(data[11]) << 24
-#
-#         data += self._device.read(size - 14)
-#         return data
