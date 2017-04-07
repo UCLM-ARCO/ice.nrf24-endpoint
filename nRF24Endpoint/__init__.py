@@ -95,9 +95,13 @@ class EndpointI(pe.EndpointI):
         endp.initWithOptions(args, self._oaEndpoint)
         return endp
 
-#     @show_trace
-#     def equivalent(self, other):
-#         return self._type == other._type
+    @show_trace
+    def equivalent(self, other):
+        return (
+            self._type == other._type and
+            self._info.address == other._info.address and
+            self._info.channel == other._info.channel
+        )
 
     @show_trace
     def connectors_async(self, callback):
@@ -126,6 +130,51 @@ class ConnectorI(pe.ConnectorI):
         return str(self._info)
 
 
+class SerialDevice:
+    _device = None
+    _initialized = False
+
+    def __init__(self, *args, **kwargs):
+        if SerialDevice._device is None:
+            SerialDevice._device = serial.Serial(*args, **kwargs)
+
+    def write(self, *args, **kwargs):
+        if SerialDevice._device is None:
+            return 0
+        return self._device.write(*args, **kwargs)
+
+    def flush(self, *args, **kwargs):
+        if SerialDevice._device is None:
+            return
+        self._device.flush(*args, **kwargs)
+
+    def read(self, *args, **kwargs):
+        if SerialDevice._device is None:
+            return b""
+        return self._device.read(*args, **kwargs)
+
+    def fileno(self, *args, **kwargs):
+        if SerialDevice._device is None:
+            return -1
+        return self._device.fileno(*args, **kwargs)
+
+    def close(self):
+        if SerialDevice._device is not None:
+            SerialDevice._device.close()
+            SerialDevice._device = None
+
+    def wait_initialization(self):
+        if SerialDevice._initialized:
+            return
+
+        ok = self._device.read(2)
+        if ok == b"OK":
+            SerialDevice._initialized = True
+            return
+
+        raise RuntimeError("nRF24 Bridge is not ready!")
+
+
 class nRF24Bridge:
     MAX_PAYLOAD_SIZE = 256
     NBP_MAGIC = b"NBP"
@@ -136,21 +185,13 @@ class nRF24Bridge:
 
     @show_trace
     def __init__(self, path, speed, channel, address):
-        self._device = serial.Serial(path, baudrate=speed, timeout=3)
-        self.wait_for_device_reset()
+        self._device = SerialDevice(path, baudrate=speed, timeout=3)
+        self._device.wait_initialization()
 
         self.set_channel(channel)
 
         if address is not None:
             self.set_address(address)
-
-    @show_trace
-    def wait_for_device_reset(self):
-        ok = self._device.read(2)
-        if ok == b"OK":
-            return
-
-        raise RuntimeError("nRF24 Bridge is not ready!")
 
     @show_trace
     def set_channel(self, channel):
@@ -185,7 +226,7 @@ class nRF24Bridge:
     def send(self, data):
         assert len(data) <= self.MAX_PAYLOAD_SIZE, "Message is too big!"
 
-        cmd = self.NBP_MAGIC  + self.CMD_SEND
+        cmd = self.NBP_MAGIC + self.CMD_SEND
         cmd += bytes([(len(data) >> 8) & 0xff, len(data) & 0xff])
         cmd += data
 
@@ -195,12 +236,6 @@ class nRF24Bridge:
 
     @show_trace
     def receive(self):
-        # data = b""
-        # while self._device.in_waiting:
-        #     data += self._device.read(self._device.in_waiting)
-        # print (data)
-        # return b""
-
         data = b""
         while True:
             c = self._device.read()

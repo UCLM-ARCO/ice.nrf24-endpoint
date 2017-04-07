@@ -1,0 +1,4 @@
+: DO NOT EDIT, it will be overwritten!
+: destination | routerId | endpoints | mode
+: --------------------------------------------------
+5F10 | 5F10 | nrf24 -c 90 -a car01 | d

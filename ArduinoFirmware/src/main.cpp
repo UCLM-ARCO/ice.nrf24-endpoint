@@ -1,46 +1,5 @@
 // -*- mode: c++; coding: utf-8 -*-
 
-// #include <Arduino.h>
-// #include <SPI.h>
-// #include <EEPROM.h>
-// #include <RF24.h>
-//
-// #include <LFP.h>
-//
-// // These pins are for Arduino Nano
-// #define RF_CE 7
-// #define RF_CS 8
-//
-// RF24 radio(RF_CE, RF_CS);
-//
-// void setup() {
-//     Serial.begin(115200);
-//
-//     radio.begin();
-//     radio.setDataRate(RF24_2MBPS);
-//     radio.setCRCLength(RF24_CRC_16);
-//     radio.setPayloadSize(32);
-//     radio.setAutoAck(true);
-//     radio.setRetries(10, 15);
-//     radio.setPALevel(RF24_PA_HIGH);
-//
-//     byte address[] = "rover";
-//     radio.setChannel(100);
-//     radio.openReadingPipe(1, address);
-//     radio.startListening();
-//
-//     Serial.print("OK");
-// }
-//
-// void loop() {
-//     if (radio.available()) {
-//         Serial.println("Radio available!");
-//     }
-// }
-
-
-
-
 #include <Arduino.h>
 #include <SPI.h>
 #include <EEPROM.h>
@@ -111,19 +70,12 @@ void cmd_set_channel() {
     byte channel = Serial.read();
 
     radio.setChannel(channel);
-
-    // Serial.print("- set channel: ");
-    // Serial.println(channel);
 }
 
 void cmd_set_address() {
     byte address[] = {0, 0, 0, 0, 0, 0};
     if (!serial_read(address, 5))
         return;
-
-    // Serial.print("- set address: '");
-    // Serial.print((const char*)address);
-    // Serial.println("'");
 
     radio.openReadingPipe(1, address);
     radio.startListening();
@@ -133,10 +85,6 @@ void cmd_set_destination() {
     byte address[] = {0, 0, 0, 0, 0, 0};
     if (!serial_read(address, 5))
         return;
-
-    // Serial.print("- set destination: '");
-    // Serial.print((const char*)address);
-    // Serial.println("'");
 
     radio.openWritingPipe(address);
 }
