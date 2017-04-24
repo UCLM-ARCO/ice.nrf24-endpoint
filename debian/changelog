@@ -1,3 +1,9 @@
+ice-nrf24 (0.20170424-1) unstable; urgency=low
+
+  * New release
+
+ -- Oscar Aceña Herrera <oscaracena@gmail.com>  Mon, 24 Apr 2017 16:22:39 +0200
+
 ice-nrf24 (0.20170406-1) unstable; urgency=low
 
   * Initial release
