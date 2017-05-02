@@ -1,3 +1,9 @@
+ice-nrf24 (0.20170502-1) unstable; urgency=low
+
+  * New release, fix missing depends
+
+ -- Oscar Aceña Herrera <oscaracena@gmail.com>  Tue, 02 May 2017 13:47:07 +0200
+
 ice-nrf24 (0.20170424-1) unstable; urgency=low
 
   * New release
