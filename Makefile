@@ -5,6 +5,7 @@ all:
 install: clean
 	python3 setup.py install \
 	--prefix=$(DESTDIR)/usr/ \
+	--no-compile \
         --install-layout=deb
 
 	$(RM) -fr ./debian/ice-nrf24/usr/lib/python3/dist-packages/nRF24Endpoint/__pycache__
