@@ -7,7 +7,7 @@ Standards-Version: 3.9.8
 
 Package: ice-nrf24
 Architecture: all
-Depends: ${misc:Depends}, python3, ice-pyendpoint, python-serial
+Depends: ${misc:Depends}, python3, ice-pyendpoint, python3-serial
 Description: Endpoint for ZeroC-ICE using nRF24
  This ZeroC Ice endpoint uses an Arduino bridge (which sketch is
  included in this package) connected to a nRF24 transceiver. Although
