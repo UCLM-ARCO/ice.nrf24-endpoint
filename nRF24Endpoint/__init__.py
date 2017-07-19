@@ -139,31 +139,37 @@ class SerialDevice:
             SerialDevice._device = serial.Serial(*args, **kwargs)
 
     def write(self, *args, **kwargs):
+        # print(" - write")
         if SerialDevice._device is None:
             return 0
         return self._device.write(*args, **kwargs)
 
     def flush(self, *args, **kwargs):
+        # print(" - flush")
         if SerialDevice._device is None:
             return
         self._device.flush(*args, **kwargs)
 
     def read(self, *args, **kwargs):
+        # print(" - read")
         if SerialDevice._device is None:
             return b""
         return self._device.read(*args, **kwargs)
 
     def fileno(self, *args, **kwargs):
+        # print(" - fileno")
         if SerialDevice._device is None:
             return -1
         return self._device.fileno(*args, **kwargs)
 
     def close(self):
+        # print(" - close")
         if SerialDevice._device is not None:
             SerialDevice._device.close()
             SerialDevice._device = None
 
     def wait_initialization(self):
+        # print(" - wait initialization")
         if SerialDevice._initialized:
             return
 
@@ -176,6 +182,8 @@ class SerialDevice:
 
 
 class nRF24Bridge:
+    _hw_instance = None
+
     MAX_PAYLOAD_SIZE = 256
     NBP_MAGIC = b"NBP"
     CMD_SET_CHANNEL = b'1'
@@ -185,9 +193,11 @@ class nRF24Bridge:
 
     @show_trace
     def __init__(self, path, speed, channel, address):
-        self._device = SerialDevice(path, baudrate=speed, timeout=3)
-        self._device.wait_initialization()
+        if nRF24Bridge._hw_instance is None:
+            nRF24Bridge._hw_instance = SerialDevice(path, baudrate=speed, timeout=3)
+            nRF24Bridge._hw_instance.wait_initialization()
 
+        self._device = nRF24Bridge._hw_instance
         self.set_channel(channel)
 
         if address is not None:
@@ -291,7 +301,11 @@ class TransceiverI(pe.TransceiverI):
         address = None if connect else info.address
         self._device = nRF24Bridge(path, speed, info.channel, address)
 
-        self._fd = self._device.get_serial_fd()
+        if not connect:
+            self._fd = self._device.get_serial_fd()
+        else:
+            self._fd = os.pipe()[0]
+
         self._incoming = not connect
         self._info = info
         self._connectionId = uuid.uuid4().hex
@@ -327,4 +341,7 @@ class TransceiverI(pe.TransceiverI):
 
     @show_trace
     def close(self):
-        self._device.close()
+        if self._incoming:
+            self._device.close()
+        else:
+            os.close(self._fd)
